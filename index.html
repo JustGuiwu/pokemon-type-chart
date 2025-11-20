@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>属性相克表 | 宝可梦对战</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --normal: #A8A77A;
+            --fire: #EE8130;
+            --water: #6390F0;
+            --electric: #F7D02C;
+            --grass: #7AC74C;
+            --ice: #96D9D6;
+            --fighting: #C22E28;
+            --poison: #A33EA1;
+            --ground: #E2BF65;
+            --flying: #A98FF3;
+            --psychic: #F95587;
+            --bug: #A6B91A;
+            --rock: #B6A136;
+            --ghost: #735797;
+            --dragon: #6F35FC;
+            --steel: #B7B7CE;
+            --dark: #705746;
+            --fairy: #D685AD;
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Noto Sans SC', 'Rajdhani', sans-serif;
+            color: #e2e8f0;
+        }
+
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Type Colors Classes */
+        .type-一般 { background: var(--normal); }
+        .type-火 { background: var(--fire); }
+        .type-水 { background: var(--water); }
+        .type-电 { background: var(--electric); }
+        .type-草 { background: var(--grass); }
+        .type-冰 { background: var(--ice); }
+        .type-格斗 { background: var(--fighting); }
+        .type-毒 { background: var(--poison); }
+        .type-地面 { background: var(--ground); }
+        .type-飞行 { background: var(--flying); }
+        .type-超能力 { background: var(--psychic); }
+        .type-虫 { background: var(--bug); }
+        .type-岩石 { background: var(--rock); }
+        .type-幽灵 { background: var(--ghost); }
+        .type-龙 { background: var(--dragon); }
+        .type-钢 { background: var(--steel); }
+        .type-恶 { background: var(--dark); }
+        .type-妖精 { background: var(--fairy); }
+
+        /* Styling the Selection Buttons */
+        .type-btn {
+            transition: all 0.2s ease;
+            opacity: 0.5;
+            transform: scale(0.95);
+            border: 1px solid transparent;
+        }
+
+        .type-btn:hover {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .type-btn.active {
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px currentColor;
+            border-color: white;
+            z-index: 10;
+        }
+
+        /* Matrix Grid Styles */
+        .matrix-container {
+            overflow-x: auto;
+        }
+
+        .matrix-table {
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+        .matrix-cell {
+            width: 35px;
+            height: 35px;
+            text-align: center;
+            font-size: 0.85rem; 
+            font-weight: bold;
+            cursor: default;
+            border-radius: 4px;
+            transition: all 0.1s;
+        }
+
+        /* Crosshair Highlighting for Row/Col Cells */
+        .highlight-crosshair {
+            filter: brightness(1.2); /* 稍微降低亮度提升幅度，防止过曝 */
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4); /* 加强内描边 */
+            position: relative;
+            z-index: 20;
+        }
+
+        /* 修复：除了绿色格子(2x是黑字)以外，强制其他高亮格子的文字为纯白并加阴影 */
+        .highlight-crosshair:not(.bg-green-500) {
+            color: #ffffff !important; /* 强制纯白，解决1x格子文字半透明的问题 */
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9); /* 增加黑色文字阴影，解决背景太亮看不清字的问题 */
+        }
+
+        /* 针对绿色格子(黑字)，加粗一点防止被背景吃掉 */
+        .highlight-crosshair.bg-green-500 {
+            font-weight: 900;
+        }
+
+        /* Specific Header Highlighting */
+        .header-highlight {
+            z-index: 50 !important;
+            box-shadow: inset 0 0 0 2px white, 0 0 10px rgba(255, 255, 255, 0.5); 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        /* Result Animation */
+        @keyframes pulse-result {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .result-pulse {
+            animation: pulse-result 0.5s ease-in-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-700 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-crosshairs text-3xl text-cyan-400"></i>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wider text-white uppercase">宝可梦 属性相克</h1>
+                    <!-- 删除了 mono-font 类，现在使用默认的 Noto Sans SC -->
+                    <p class="text-xs text-slate-400 tracking-widest">第六世代起</p>
+                </div>
+            </div>
+            <div class="hidden md:block text-right">
+                <div class="text-xs text-slate-500">系统状态</div>
+                <div class="text-emerald-400 text-sm font-bold flex items-center gap-2 justify-end">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 在线
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+
+        <!-- SECTION 1: CALCULATOR -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left: Controls -->
+            <div class="lg:col-span-8 bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-calculator text-cyan-400"></i> 属性克制分析
+                    </h2>
+                    <button onclick="resetCalc()" class="text-xs text-slate-400 hover:text-white underline">重置系统</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Attacker Column -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-fist-raised"></i> 攻击方
+                            </div>
+                            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300">选择 1 个</span>
+                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="attacker-grid">
+                            <!-- Buttons injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Defender Column -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fas fa-shield-alt"></i> 防御方
+                            </div>
+                            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-emerald-400 animate-pulse">选择 1-2 个</span>
+                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="defender-grid">
+                            <!-- Buttons injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Result Output -->
+            <div class="lg:col-span-4">
+                <div class="bg-slate-900 rounded-xl p-1 border border-slate-700 h-full flex flex-col relative overflow-hidden group">
+                    <!-- Background decorative elements -->
+                    <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500 shadow-[0_0_15px_#06b6d4]"></div>
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+                    
+                    <div class="relative z-10 flex-grow flex flex-col items-center justify-center p-8 text-center" id="result-container">
+                        <div class="text-slate-500 text-sm mb-2 uppercase tracking-widest">伤害倍率</div>
+                        
+                        <!-- Dynamic Result Text -->
+                        <div id="result-multiplier" class="text-7xl font-bold text-white mono-font mb-2">---</div>
+                        <div id="result-text" class="text-xl font-bold text-slate-400 uppercase">请选择属性</div>
+                        
+                        <!-- Visual Bars -->
+                        <div class="w-full h-2 bg-slate-800 rounded-full mt-6 overflow-hidden">
+                            <div id="power-bar" class="h-full bg-slate-600 w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: THE MASTER MATRIX -->
+        <section class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-th text-purple-400"></i> 属性相克总览
+            </h2>
+            <div class="text-xs text-slate-400 mb-4 flex gap-4">
+                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> 2× (绝佳)</div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded"></div> 0.5× (不好)</div>
+                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-black border border-slate-600 rounded"></div> 0× (无效)</div>
+            </div>
+
+            <div class="matrix-container pb-4">
+                <table id="full-matrix" class="matrix-table w-full">
+                    <!-- Generated by JS -->
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const types = [
+            '一般', '火', '水', '电', '草', '冰', 
+            '格斗', '毒', '地面', '飞行', '超能力', '虫', 
+            '岩石', '幽灵', '龙', '钢', '恶', '妖精'
+        ];
+
+        // 0 = 无效, 0.5 = 效果不好, 1 = 有效果, 2 = 效果绝佳
+        // Rows: Attacker, Cols: Defender
+        const chart = [
+            // Nor Fir Wat Ele Gra Ice Fig Poi Gro Fly Psy Bug Roc Gho Dra Ste Dar Fai
+            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0.5, 0, 1,  0.5, 1,  1], // Normal (一般)
+            [1,  0.5, 0.5, 1, 2,  2,  1,  1,  1,  1,  1,  2,  0.5, 1, 0.5, 2,  1,  1], // Fire (火)
+            [1,  2,  0.5, 1, 0.5, 1,  1,  1,  2,  1,  1,  1,  2,  1, 0.5, 1,  1,  1], // Water (水)
+            [1,  1,  2,  0.5, 0.5, 1, 1,  1,  0,  2,  1,  1,  1,  1, 0.5, 1,  1,  1], // Electric (电)
+            [1,  0.5, 2,  1,  0.5, 1, 1,  0.5, 2, 0.5, 1, 0.5, 2, 1, 0.5, 0.5, 1, 1], // Grass (草)
+            [1,  0.5, 0.5, 1, 2,  0.5, 1, 1,  2,  2,  1,  1,  1,  1, 2,  0.5, 1,  1], // Ice (冰)
+            [2,  1,  1,  1,  1,  2,  1,  0.5, 1, 0.5, 0.5, 0.5, 2, 0, 1,  2,  2,  0.5], // Fighting (格斗)
+            [1,  1,  1,  1,  2,  1,  1,  0.5, 0.5, 1, 1,  1,  0.5, 0.5, 1, 0, 1, 2], // Poison (毒)
+            [1,  2,  1,  2,  0.5, 1,  1,  2,  1,  0,  1,  0.5, 2,  1, 1,  2,  1,  1], // Ground (地面)
+            [1,  1,  1,  0.5, 2,  1,  2,  1,  1,  1,  1,  2,  0.5, 1, 1,  0.5, 1,  1], // Flying (飞行)
+            [1,  1,  1,  1,  1,  1,  2,  2,  1,  1,  0.5, 1, 1,  1, 1,  0.5, 0,  1], // Psychic (超能力)
+            [1,  0.5, 1,  1,  2,  1,  0.5, 0.5, 1, 0.5, 2,  1, 1,  0.5, 1, 0.5, 2, 0.5], // Bug (虫)
+            [1,  2,  1,  1,  1,  2,  0.5, 1,  0.5, 2,  1,  2,  1,  1, 1,  0.5, 1,  1], // Rock (岩石)
+            [0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 1], // Ghost (幽灵)
+            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 2,  0.5, 1,  0], // Dragon (龙)
+            [1,  0.5, 0.5, 0.5, 1, 2, 1,  1,  1,  1,  1,  1,  2,  1, 1,  0.5, 1,  2], // Steel (钢)
+            [1,  1,  1,  1,  1,  1,  0.5, 1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 0.5], // Dark (恶)
+            [1,  0.5, 1,  1,  1,  1,  2,  0.5, 1,  1,  1,  1,  1,  1, 2,  0.5, 2,  1], // Fairy (妖精)
+        ];
+
+        // --- DOM ELEMENTS ---
+        const attackerGrid = document.getElementById('attacker-grid');
+        const defenderGrid = document.getElementById('defender-grid');
+        const matrixTable = document.getElementById('full-matrix');
+        const resultMult = document.getElementById('result-multiplier');
+        const resultText = document.getElementById('result-text');
+        const powerBar = document.getElementById('power-bar');
+        const resultContainer = document.getElementById('result-container');
+
+        let selectedAttacker = null;
+        let selectedDefenders = [];
+
+        // --- INIT CALCULATOR ---
+        function initCalculator() {
+            types.forEach((type, index) => {
+                // Attacker Buttons
+                const atkBtn = createTypeBtn(type, index, 'attacker');
+                attackerGrid.appendChild(atkBtn);
+
+                // Defender Buttons
+                const defBtn = createTypeBtn(type, index, 'defender');
+                defenderGrid.appendChild(defBtn);
+            });
+        }
+
+        function createTypeBtn(type, index, role) {
+            const btn = document.createElement('button');
+            btn.className = `type-btn type-${type} text-white text-sm font-bold uppercase py-2 px-1 rounded shadow-sm truncate`;
+            btn.innerText = type;
+            btn.onclick = () => selectType(index, role, btn);
+            return btn;
+        }
+
+        function selectType(index, role, btnElement) {
+            if (role === 'attacker') {
+                Array.from(attackerGrid.children).forEach(c => c.classList.remove('active'));
+                btnElement.classList.add('active');
+                selectedAttacker = index;
+            } else {
+                const defIndex = selectedDefenders.indexOf(index);
+                if (defIndex > -1) {
+                    selectedDefenders.splice(defIndex, 1);
+                    btnElement.classList.remove('active');
+                } else {
+                    if (selectedDefenders.length >= 2) {
+                        const removedIndex = selectedDefenders.shift();
+                        defenderGrid.children[removedIndex].classList.remove('active');
+                    }
+                    selectedDefenders.push(index);
+                    btnElement.classList.add('active');
+                }
+            }
+            calculate();
+        }
+
+        function calculate() {
+            if (selectedAttacker === null || selectedDefenders.length === 0) {
+                resetVisualsIfEmpty();
+                return;
+            }
+
+            let multiplier = 1;
+            selectedDefenders.forEach(defIndex => {
+                multiplier *= chart[selectedAttacker][defIndex];
+            });
+            
+            resultMult.innerText = `×${multiplier}`; // Changed x to ×
+            resultContainer.classList.remove('result-pulse');
+            void resultContainer.offsetWidth; 
+            resultContainer.classList.add('result-pulse');
+
+            updateResultStyling(multiplier);
+        }
+
+        function updateResultStyling(val) {
+            let text = "";
+            let colorClass = ""; 
+            let barClass = "";   
+
+            if (val === 4) {
+                text = "效果绝佳";
+                colorClass = "text-emerald-400";
+                barClass = "bg-emerald-400 w-full shadow-[0_0_10px_#34d399]";
+            } else if (val === 2) {
+                text = "效果绝佳";
+                colorClass = "text-green-400";
+                barClass = "bg-green-500 w-3/4";
+            } else if (val === 1) {
+                text = "有效果";
+                colorClass = "text-white";
+                barClass = "bg-white w-1/2";
+            } else if (val === 0.5) {
+                text = "效果不好";
+                colorClass = "text-red-400";
+                barClass = "bg-red-500 w-1/4";
+            } else if (val === 0.25) {
+                text = "效果不好";
+                colorClass = "text-red-600";
+                barClass = "bg-red-700 w-[10%]";
+            } else if (val === 0) {
+                text = "没有效果";
+                colorClass = "text-slate-500";
+                barClass = "bg-slate-700 w-0";
+            }
+
+            resultText.innerText = text;
+            resultText.className = `text-xl font-bold uppercase ${colorClass}`;
+            resultMult.className = `text-7xl font-bold mono-font mb-2 ${colorClass}`;
+            powerBar.className = `h-full transition-all duration-500 ${barClass}`;
+        }
+
+        function resetVisualsIfEmpty() {
+            if (selectedAttacker !== null && selectedDefenders.length === 0) {
+                 resultText.innerText = "请选择防御方";
+            } else if (selectedAttacker === null) {
+                 resultText.innerText = "请选择攻击方";
+            }
+            resultMult.innerText = "---";
+            resultMult.className = "text-7xl font-bold text-white mono-font mb-2";
+            resultText.className = "text-xl font-bold text-slate-400 uppercase";
+            powerBar.className = "h-full bg-slate-600 w-0";
+        }
+
+        function resetCalc() {
+            selectedAttacker = null;
+            selectedDefenders = [];
+            Array.from(attackerGrid.children).forEach(c => c.classList.remove('active'));
+            Array.from(defenderGrid.children).forEach(c => c.classList.remove('active'));
+            resetVisualsIfEmpty();
+            resultText.innerText = "请选择属性";
+        }
+
+        // --- CROSSHAIR HIGHLIGHT LOGIC ---
+        function handleMatrixHover(e) {
+            const cell = e.target.closest('.matrix-cell');
+            if (cell) {
+                const r = cell.dataset.row;
+                const c = cell.dataset.col;
+                
+                // Highlight all in Row R and Col C
+                document.querySelectorAll('.matrix-cell').forEach(td => {
+                    if (td.dataset.row === r || td.dataset.col === c) {
+                        td.classList.add('highlight-crosshair');
+                    } else {
+                        td.classList.remove('highlight-crosshair');
+                    }
+                });
+
+                // Highlight Headers
+                document.querySelectorAll('th').forEach(th => th.classList.remove('header-highlight'));
+                const rowHeader = document.getElementById(`th-row-${r}`);
+                const colHeader = document.getElementById(`th-col-${c}`);
+                if (rowHeader) rowHeader.classList.add('header-highlight');
+                if (colHeader) colHeader.classList.add('header-highlight');
+            }
+        }
+
+        function clearMatrixHover() {
+            document.querySelectorAll('.matrix-cell').forEach(td => td.classList.remove('highlight-crosshair'));
+            document.querySelectorAll('th').forEach(th => th.classList.remove('header-highlight'));
+        }
+
+        // --- INIT MATRIX ---
+        function initMatrix() {
+            // Add event listeners for crosshair
+            matrixTable.addEventListener('mouseover', handleMatrixHover);
+            matrixTable.addEventListener('mouseout', clearMatrixHover);
+
+            // Header Row (Defenders)
+            const thead = document.createElement('tr');
+            thead.innerHTML = `<th class="p-1 bg-slate-900 sticky left-0 z-20 border-b border-r border-slate-700 text-xs text-slate-400">攻\\防</th>`;
+            
+            types.forEach((t, i) => {
+                const th = document.createElement('th');
+                th.className = `p-1 min-w-[40px] text-xs uppercase text-white font-bold type-${t} rounded-t align-bottom pb-2 transition-all duration-200`; 
+                th.id = `th-col-${i}`;
+                th.innerHTML = `<div>${t.split('').join('<br>')}</div>`;
+                th.style.height = "60px";
+                th.style.verticalAlign = "bottom";
+                thead.appendChild(th);
+            });
+            matrixTable.appendChild(thead);
+
+            // Body Rows (Attackers)
+            chart.forEach((row, rIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = "matrix-row";
+
+                // Row Label (Attacker)
+                const th = document.createElement('th');
+                th.className = `p-1 text-xs uppercase text-white font-bold sticky left-0 z-10 type-${types[rIndex]} border-r border-slate-900 text-left pl-2 rounded-l transition-all duration-200`; 
+                th.id = `th-row-${rIndex}`;
+                th.innerText = types[rIndex];
+                tr.appendChild(th);
+
+                // Cells
+                row.forEach((val, cIndex) => {
+                    const td = document.createElement('td');
+                    
+                    // Metadata for Highlighting
+                    td.dataset.row = rIndex;
+                    td.dataset.col = cIndex;
+
+                    let bgClass = "bg-slate-700 text-slate-500"; // Default 1x
+                    
+                    if (val === 2) bgClass = "bg-green-500 text-black shadow-[0_0_5px_rgba(34,197,94,0.5)] z-10";
+                    else if (val === 0.5) bgClass = "bg-red-500/80 text-white";
+                    else if (val === 0) bgClass = "bg-black text-slate-600 border border-slate-700";
+                    else bgClass = "bg-slate-700/50 text-white/30"; // 1x slightly faded
+
+                    td.className = `matrix-cell ${bgClass}`;
+                    td.innerText = val === 0.5 ? '½' : val;
+                    td.title = `${types[rIndex]} vs ${types[cIndex]}: ${val}×`; // Changed x to ×
+
+                    tr.appendChild(td);
+                });
+
+                matrixTable.appendChild(tr);
+            });
+        }
+
+        // Run
+        initCalculator();
+        initMatrix();
+
+    </script>
+</body>
+</html>
