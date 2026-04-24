@@ -749,11 +749,11 @@
 
             const rowsArr = [];
             // 4× 和 0.25× 仅在双属性下可能出现，单属性时隐藏
-            if (isDual) rowsArr.push(bucketRow('4️四倍弱点', '4×', buckets[4], 'emerald-strong', 0));
+            if (isDual) rowsArr.push(bucketRow('四倍弱点', '4×', buckets[4], 'emerald-strong', 0));
             rowsArr.push(bucketRow('二倍弱点', '2×', buckets[2], 'emerald', 0));
             rowsArr.push(bucketRow('有效果', '1×', buckets[1], 'slate', 0));
-            rowsArr.push(bucketRow('2 倍抵抗', '½×', buckets[0.5], 'red', 0));
-            if (isDual) rowsArr.push(bucketRow('二倍抵抗', '¼×', buckets[0.25], 'red-strong', 0));
+            rowsArr.push(bucketRow('二倍抵抗', '½×', buckets[0.5], 'red', 0));
+            if (isDual) rowsArr.push(bucketRow('四倍抵抗', '¼×', buckets[0.25], 'red-strong', 0));
             rowsArr.push(bucketRow('免疫', '0×', buckets[0], 'neutral', 0));
 
             return `<div class="space-y-2">${rowsArr.join('')}</div>`;
