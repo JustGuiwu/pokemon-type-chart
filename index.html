@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -38,13 +38,18 @@
             background-color: var(--bg-dark);
             font-family: 'Noto Sans SC', 'Rajdhani', sans-serif;
             color: #e2e8f0;
+            /* 细腻的背景纹理增加质感 */
+            background-image: 
+                radial-gradient(ellipse at top, rgba(30, 58, 138, 0.15), transparent 50%),
+                radial-gradient(ellipse at bottom, rgba(88, 28, 135, 0.1), transparent 50%);
+            background-attachment: fixed;
         }
 
         .mono-font {
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Type Colors Classes */
+        /* 属性颜色类 */
         .type-一般 { background: var(--normal); }
         .type-火 { background: var(--fire); }
         .type-水 { background: var(--water); }
@@ -64,28 +69,30 @@
         .type-恶 { background: var(--dark); }
         .type-妖精 { background: var(--fairy); }
 
-        /* Styling the Selection Buttons */
+        /* 属性按钮样式 */
         .type-btn {
-            transition: all 0.2s ease;
-            opacity: 0.5;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.55;
             transform: scale(0.95);
             border: 1px solid transparent;
+            position: relative;
         }
 
         .type-btn:hover {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1.02);
+            filter: brightness(1.1);
         }
 
         .type-btn.active {
             opacity: 1;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px currentColor;
-            border-color: white;
+            transform: scale(1.08);
+            box-shadow: 0 0 18px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.9);
             z-index: 10;
         }
 
-        /* Matrix Grid Styles */
+        /* 矩阵样式 */
         .matrix-container {
             overflow-x: auto;
         }
@@ -103,36 +110,32 @@
             font-weight: bold;
             cursor: default;
             border-radius: 4px;
-            transition: all 0.1s;
+            transition: all 0.15s;
         }
 
-        /* Crosshair Highlighting for Row/Col Cells */
+        /* 十字准星高亮 */
         .highlight-crosshair {
-            filter: brightness(1.2); /* 稍微降低亮度提升幅度，防止过曝 */
-            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4); /* 加强内描边 */
+            filter: brightness(1.2);
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
             position: relative;
             z-index: 20;
         }
-
-        /* 修复：除了绿色格子(2x是黑字)以外，强制其他高亮格子的文字为纯白并加阴影 */
         .highlight-crosshair:not(.bg-green-500) {
-            color: #ffffff !important; /* 强制纯白，解决1x格子文字半透明的问题 */
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9); /* 增加黑色文字阴影，解决背景太亮看不清字的问题 */
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
-
-        /* 针对绿色格子(黑字)，加粗一点防止被背景吃掉 */
         .highlight-crosshair.bg-green-500 {
             font-weight: 900;
         }
 
-        /* Specific Header Highlighting */
+        /* 表头高亮 */
         .header-highlight {
             z-index: 50 !important;
             box-shadow: inset 0 0 0 2px white, 0 0 10px rgba(255, 255, 255, 0.5); 
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
         
-        /* Result Animation */
+        /* 结果脉冲动画 */
         @keyframes pulse-result {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -143,94 +146,204 @@
             animation: pulse-result 0.5s ease-in-out;
         }
 
-        /* Custom Scrollbar */
+        /* 组合分析模块的动画 */
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .combo-badge {
+            display: inline-block;
+            vertical-align: middle;
+            animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+            /* 仅过渡需要变化的属性，避免 text-shadow 一起过渡造成文字"错位"错觉 */
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        filter 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 固定的文字阴影，保证在亮色背景（如电/一般/岩石等）上可读 */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.45);
+            /* GPU 合成，消除 transform 时文字的亚像素抖动 */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
+            -webkit-font-smoothing: antialiased;
+        }
+        .combo-badge:hover {
+            transform: translateY(-2px) scale(1.04);
+            filter: brightness(1.08);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            /* 不再变动 text-shadow —— 过渡中的阴影变化会让文字看起来在"错位" */
+        }
+
+        /* 为所有在亮色背景上显示白字的属性徽章统一加上文字阴影 */
+        .type-badge {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.45);
+        }
+
+        .bucket-card {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .bucket-card.empty {
+            opacity: 0.4;
+        }
+
+        /* 组合选择器按钮 */
+        .combo-select-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.6;
+            transform: scale(0.96);
+            position: relative;
+            overflow: hidden;
+        }
+        .combo-select-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .combo-select-btn:hover { opacity: 1; transform: scale(1.02); }
+        .combo-select-btn:hover::before { opacity: 1; }
+        .combo-select-btn.active {
+            opacity: 1;
+            transform: scale(1.08);
+            box-shadow: 0 0 20px currentColor, 0 4px 14px rgba(0,0,0,0.45);
+            border: 2px solid rgba(255,255,255,0.95);
+            z-index: 5;
+        }
+        .combo-select-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 10px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+
+        /* 结果面板的过渡 */
+        .result-panel {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+
+        /* 类别标签（进攻端、防御端）上的小装饰 */
+        .section-divider {
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.4), transparent);
+            height: 1px;
+        }
+
+        /* 自定义滚动条 */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+        /* 倍率标签样式 - 用于分组显示 */
+        .multiplier-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        /* 空状态提示 */
+        .placeholder-glow {
+            background: linear-gradient(90deg, 
+                rgba(148,163,184,0.05), 
+                rgba(148,163,184,0.12), 
+                rgba(148,163,184,0.05));
+            background-size: 200% 100%;
+            animation: shimmer 2.5s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+
+        /* 属性按钮内的文字细节调整 */
+        .type-btn, .combo-select-btn {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header -->
+    <!-- 顶栏 -->
     <header class="border-b border-slate-700 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <i class="fas fa-crosshairs text-3xl text-cyan-400"></i>
                 <div>
                     <h1 class="text-2xl font-bold tracking-wider text-white uppercase">宝可梦 属性相克</h1>
-                    <!-- 删除了 mono-font 类，现在使用默认的 Noto Sans SC -->
                     <p class="text-xs text-slate-400 tracking-widest">第六世代起</p>
                 </div>
             </div>
-            <div class="hidden md:block text-right">
-                <div class="text-xs text-slate-500">Guiwu</div>
-                <div class="text-emerald-400 text-sm font-bold flex items-center gap-2 justify-end">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 在线
-                </div>
+            <div class="hidden md:flex items-center gap-2 text-slate-400 text-sm">
+                <i class="fas fa-shield-halved text-cyan-400/70"></i>
+                <span>招式效果查询器</span>
             </div>
         </div>
     </header>
 
     <main class="flex-grow p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
 
-        <!-- SECTION 1: CALCULATOR -->
+        <!-- SECTION 1: 伤害倍率计算器 -->
         <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Left: Controls -->
+            <!-- 左: 控制面板 -->
             <div class="lg:col-span-8 bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-2xl">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-calculator text-cyan-400"></i> 属性克制分析
+                        <i class="fas fa-calculator text-cyan-400"></i> 伤害倍率计算
                     </h2>
-                    <button onclick="resetCalc()" class="text-xs text-slate-400 hover:text-white underline">重置系统</button>
+                    <button onclick="resetCalc()" class="text-xs text-slate-400 hover:text-white underline transition">重置选择</button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Attacker Column -->
+                    <!-- 攻击方 -->
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <div class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fas fa-fist-raised"></i> 攻击方
+                                <i class="fas fa-fist-raised"></i> 招式属性
                             </div>
                             <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300">选择 1 个</span>
                         </div>
-                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="attacker-grid">
-                            <!-- Buttons injected via JS -->
-                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="attacker-grid"></div>
                     </div>
 
-                    <!-- Defender Column -->
+                    <!-- 防御方 -->
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <div class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fas fa-shield-alt"></i> 防御方
+                                <i class="fas fa-shield-alt"></i> 防御方属性
                             </div>
-                            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-emerald-400 animate-pulse">选择 1-2 个</span>
+                            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-emerald-400">选择 1-2 个</span>
                         </div>
-                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="defender-grid">
-                            <!-- Buttons injected via JS -->
-                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="defender-grid"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right: Result Output -->
+            <!-- 右: 结果显示 -->
             <div class="lg:col-span-4">
                 <div class="bg-slate-900 rounded-xl p-1 border border-slate-700 h-full flex flex-col relative overflow-hidden group">
-                    <!-- Background decorative elements -->
                     <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500 shadow-[0_0_15px_#06b6d4]"></div>
                     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                     
                     <div class="relative z-10 flex-grow flex flex-col items-center justify-center p-8 text-center" id="result-container">
                         <div class="text-slate-500 text-sm mb-2 uppercase tracking-widest">伤害倍率</div>
                         
-                        <!-- Dynamic Result Text -->
                         <div id="result-multiplier" class="text-7xl font-bold text-white mono-font mb-2">---</div>
                         <div id="result-text" class="text-xl font-bold text-slate-400 uppercase">请选择属性</div>
                         
-                        <!-- Visual Bars -->
                         <div class="w-full h-2 bg-slate-800 rounded-full mt-6 overflow-hidden">
                             <div id="power-bar" class="h-full bg-slate-600 w-0 transition-all duration-500"></div>
                         </div>
@@ -239,59 +352,104 @@
             </div>
         </section>
 
-        <!-- SECTION 2: THE MASTER MATRIX -->
+        <!-- SECTION 2: 属性组合一览 (新增) -->
+        <section class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-layer-group text-amber-400"></i> 属性组合一览
+                </h2>
+                <button onclick="resetCombo()" class="text-xs text-slate-400 hover:text-white underline transition">重置选择</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-5">选择一个或两个属性，查看该组合作为招式的进攻效果与作为宝可梦属性时承受的伤害。</p>
+
+            <!-- 属性选择区 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-crosshairs"></i> 属性组合
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="combo-count" class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-amber-400">未选择</span>
+                        <span class="text-[10px] text-slate-500">选择 1-2 个</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-6 sm:grid-cols-9 gap-2" id="combo-grid"></div>
+            </div>
+
+            <!-- 当前选择展示 -->
+            <div id="combo-current" class="mb-6 hidden">
+                <div class="section-divider mb-4"></div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider">当前组合</span>
+                    <div id="combo-current-badges" class="flex items-center gap-2 flex-wrap"></div>
+                </div>
+            </div>
+
+            <!-- 结果区 -->
+            <div id="combo-results" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 占位 -->
+                <div class="lg:col-span-2 py-16 text-center text-slate-500 placeholder-glow rounded-lg border border-dashed border-slate-700" id="combo-placeholder">
+                    <i class="fas fa-hand-pointer text-3xl mb-3 text-slate-600"></i>
+                    <div class="text-sm">请先选择 1-2 个属性以查看组合数据</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: 完整相克矩阵 -->
         <section class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-2xl">
             <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-th text-purple-400"></i> 属性相克总览
+                <i class="fas fa-th text-purple-400"></i> 属性相克表
             </h2>
-            <div class="text-xs text-slate-400 mb-4 flex gap-4">
-                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> 2× (绝佳)</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded"></div> 0.5× (不好)</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-black border border-slate-600 rounded"></div> 0× (无效)</div>
+            <div class="text-xs text-slate-400 mb-4 flex gap-4 flex-wrap">
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-green-500 rounded"></div> 2× 效果绝佳</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-red-500 rounded"></div> ½× 效果不好</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-black border border-slate-600 rounded"></div> 0× 没有效果</div>
             </div>
 
             <div class="matrix-container pb-4">
-                <table id="full-matrix" class="matrix-table w-full">
-                    <!-- Generated by JS -->
-                </table>
+                <table id="full-matrix" class="matrix-table w-full"></table>
             </div>
         </section>
 
     </main>
 
+    <footer class="border-t border-slate-800 mt-8 py-4 text-center text-xs text-slate-600">
+        数据基于第六世代起的属性相克规则 · 术语采用宝可梦官方简体中文译名
+    </footer>
+
     <script>
-        // --- DATA ---
+        // ============ 数据 ============
         const types = [
             '一般', '火', '水', '电', '草', '冰', 
             '格斗', '毒', '地面', '飞行', '超能力', '虫', 
             '岩石', '幽灵', '龙', '钢', '恶', '妖精'
         ];
 
-        // 0 = 无效, 0.5 = 效果不好, 1 = 有效果, 2 = 效果绝佳
-        // Rows: Attacker, Cols: Defender
+        // 0 = 没有效果, 0.5 = 效果不好, 1 = 有效果, 2 = 效果绝佳
+        // 行 = 攻击属性, 列 = 防御属性
         const chart = [
-            // Nor Fir Wat Ele Gra Ice Fig Poi Gro Fly Psy Bug Roc Gho Dra Ste Dar Fai
-            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0.5, 0, 1,  0.5, 1,  1], // Normal (一般)
-            [1,  0.5, 0.5, 1, 2,  2,  1,  1,  1,  1,  1,  2,  0.5, 1, 0.5, 2,  1,  1], // Fire (火)
-            [1,  2,  0.5, 1, 0.5, 1,  1,  1,  2,  1,  1,  1,  2,  1, 0.5, 1,  1,  1], // Water (水)
-            [1,  1,  2,  0.5, 0.5, 1, 1,  1,  0,  2,  1,  1,  1,  1, 0.5, 1,  1,  1], // Electric (电)
-            [1,  0.5, 2,  1,  0.5, 1, 1,  0.5, 2, 0.5, 1, 0.5, 2, 1, 0.5, 0.5, 1, 1], // Grass (草)
-            [1,  0.5, 0.5, 1, 2,  0.5, 1, 1,  2,  2,  1,  1,  1,  1, 2,  0.5, 1,  1], // Ice (冰)
-            [2,  1,  1,  1,  1,  2,  1,  0.5, 1, 0.5, 0.5, 0.5, 2, 0, 1,  2,  2,  0.5], // Fighting (格斗)
-            [1,  1,  1,  1,  2,  1,  1,  0.5, 0.5, 1, 1,  1,  0.5, 0.5, 1, 0, 1, 2], // Poison (毒)
-            [1,  2,  1,  2,  0.5, 1,  1,  2,  1,  0,  1,  0.5, 2,  1, 1,  2,  1,  1], // Ground (地面)
-            [1,  1,  1,  0.5, 2,  1,  2,  1,  1,  1,  1,  2,  0.5, 1, 1,  0.5, 1,  1], // Flying (飞行)
-            [1,  1,  1,  1,  1,  1,  2,  2,  1,  1,  0.5, 1, 1,  1, 1,  0.5, 0,  1], // Psychic (超能力)
-            [1,  0.5, 1,  1,  2,  1,  0.5, 0.5, 1, 0.5, 2,  1, 1,  0.5, 1, 0.5, 2, 0.5], // Bug (虫)
-            [1,  2,  1,  1,  1,  2,  0.5, 1,  0.5, 2,  1,  2,  1,  1, 1,  0.5, 1,  1], // Rock (岩石)
-            [0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 1], // Ghost (幽灵)
-            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 2,  0.5, 1,  0], // Dragon (龙)
-            [1,  0.5, 0.5, 0.5, 1, 2, 1,  1,  1,  1,  1,  1,  2,  1, 1,  0.5, 1,  2], // Steel (钢)
-            [1,  1,  1,  1,  1,  1,  0.5, 1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 0.5], // Dark (恶)
-            [1,  0.5, 1,  1,  1,  1,  2,  0.5, 1,  1,  1,  1,  1,  1, 2,  0.5, 2,  1], // Fairy (妖精)
+            // 一  火  水  电  草  冰  斗  毒  地  飞  超  虫  岩  幽  龙  钢  恶  妖
+            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0.5, 0, 1,  0.5, 1,  1], // 一般
+            [1,  0.5, 0.5, 1, 2,  2,  1,  1,  1,  1,  1,  2,  0.5, 1, 0.5, 2,  1,  1], // 火
+            [1,  2,  0.5, 1, 0.5, 1,  1,  1,  2,  1,  1,  1,  2,  1, 0.5, 1,  1,  1], // 水
+            [1,  1,  2,  0.5, 0.5, 1, 1,  1,  0,  2,  1,  1,  1,  1, 0.5, 1,  1,  1], // 电
+            [1,  0.5, 2,  1,  0.5, 1, 1,  0.5, 2, 0.5, 1, 0.5, 2, 1, 0.5, 0.5, 1, 1], // 草
+            [1,  0.5, 0.5, 1, 2,  0.5, 1, 1,  2,  2,  1,  1,  1,  1, 2,  0.5, 1,  1], // 冰
+            [2,  1,  1,  1,  1,  2,  1,  0.5, 1, 0.5, 0.5, 0.5, 2, 0, 1,  2,  2,  0.5], // 格斗
+            [1,  1,  1,  1,  2,  1,  1,  0.5, 0.5, 1, 1,  1,  0.5, 0.5, 1, 0, 1, 2], // 毒
+            [1,  2,  1,  2,  0.5, 1,  1,  2,  1,  0,  1,  0.5, 2,  1, 1,  2,  1,  1], // 地面
+            [1,  1,  1,  0.5, 2,  1,  2,  1,  1,  1,  1,  2,  0.5, 1, 1,  0.5, 1,  1], // 飞行
+            [1,  1,  1,  1,  1,  1,  2,  2,  1,  1,  0.5, 1, 1,  1, 1,  0.5, 0,  1], // 超能力
+            [1,  0.5, 1,  1,  2,  1,  0.5, 0.5, 1, 0.5, 2,  1, 1,  0.5, 1, 0.5, 2, 0.5], // 虫
+            [1,  2,  1,  1,  1,  2,  0.5, 1,  0.5, 2,  1,  2,  1,  1, 1,  0.5, 1,  1], // 岩石
+            [0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 1], // 幽灵
+            [1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 2,  0.5, 1,  0], // 龙
+            [1,  0.5, 0.5, 0.5, 1, 2, 1,  1,  1,  1,  1,  1,  2,  1, 1,  0.5, 1,  2], // 钢
+            [1,  1,  1,  1,  1,  1,  0.5, 1,  1,  1,  2,  1,  1,  2, 1,  1,  0.5, 0.5], // 恶
+            [1,  0.5, 1,  1,  1,  1,  2,  0.5, 1,  1,  1,  1,  1,  1, 2,  0.5, 2,  1], // 妖精
         ];
 
-        // --- DOM ELEMENTS ---
+        // ============ DOM 引用 ============
         const attackerGrid = document.getElementById('attacker-grid');
         const defenderGrid = document.getElementById('defender-grid');
         const matrixTable = document.getElementById('full-matrix');
@@ -300,19 +458,22 @@
         const powerBar = document.getElementById('power-bar');
         const resultContainer = document.getElementById('result-container');
 
+        const comboGrid = document.getElementById('combo-grid');
+        const comboCurrent = document.getElementById('combo-current');
+        const comboCurrentBadges = document.getElementById('combo-current-badges');
+        const comboResults = document.getElementById('combo-results');
+        const comboCount = document.getElementById('combo-count');
+        const comboPlaceholder = document.getElementById('combo-placeholder');
+
         let selectedAttacker = null;
         let selectedDefenders = [];
+        let selectedCombo = [];
 
-        // --- INIT CALCULATOR ---
+        // ============ 计算器初始化 ============
         function initCalculator() {
             types.forEach((type, index) => {
-                // Attacker Buttons
-                const atkBtn = createTypeBtn(type, index, 'attacker');
-                attackerGrid.appendChild(atkBtn);
-
-                // Defender Buttons
-                const defBtn = createTypeBtn(type, index, 'defender');
-                defenderGrid.appendChild(defBtn);
+                attackerGrid.appendChild(createTypeBtn(type, index, 'attacker'));
+                defenderGrid.appendChild(createTypeBtn(type, index, 'defender'));
             });
         }
 
@@ -357,7 +518,7 @@
                 multiplier *= chart[selectedAttacker][defIndex];
             });
             
-            resultMult.innerText = `×${multiplier}`; // Changed x to ×
+            resultMult.innerText = `×${multiplier}`;
             resultContainer.classList.remove('result-pulse');
             void resultContainer.offsetWidth; 
             resultContainer.classList.add('result-pulse');
@@ -406,7 +567,7 @@
             if (selectedAttacker !== null && selectedDefenders.length === 0) {
                  resultText.innerText = "请选择防御方";
             } else if (selectedAttacker === null) {
-                 resultText.innerText = "请选择攻击方";
+                 resultText.innerText = "请选择招式属性";
             }
             resultMult.innerText = "---";
             resultMult.className = "text-7xl font-bold text-white mono-font mb-2";
@@ -423,14 +584,255 @@
             resultText.innerText = "请选择属性";
         }
 
-        // --- CROSSHAIR HIGHLIGHT LOGIC ---
+        // ============ 属性组合一览 ============
+        function initCombo() {
+            types.forEach((type, index) => {
+                const btn = document.createElement('button');
+                btn.className = `combo-select-btn type-${type} text-white text-xs sm:text-sm font-bold uppercase py-2 px-1 rounded shadow-sm truncate`;
+                btn.innerText = type;
+                btn.onclick = () => selectComboType(index, btn);
+                comboGrid.appendChild(btn);
+            });
+        }
+
+        function selectComboType(index, btnElement) {
+            const existing = selectedCombo.indexOf(index);
+            if (existing > -1) {
+                selectedCombo.splice(existing, 1);
+                btnElement.classList.remove('active');
+            } else {
+                if (selectedCombo.length >= 2) {
+                    const removedIndex = selectedCombo.shift();
+                    comboGrid.children[removedIndex].classList.remove('active');
+                }
+                selectedCombo.push(index);
+                btnElement.classList.add('active');
+            }
+            renderCombo();
+        }
+
+        function resetCombo() {
+            selectedCombo = [];
+            Array.from(comboGrid.children).forEach(c => c.classList.remove('active'));
+            renderCombo();
+        }
+
+        // 对当前组合作为「防御方」时，每种进攻属性造成的总倍率
+        function getDefensiveMultipliers(defTypeIndices) {
+            const result = {};
+            types.forEach((_, atkIdx) => {
+                let mult = 1;
+                defTypeIndices.forEach(defIdx => {
+                    mult *= chart[atkIdx][defIdx];
+                });
+                result[atkIdx] = mult;
+            });
+            return result;
+        }
+
+        // 对某单一属性作为「进攻方」时，对每种防御属性造成的倍率
+        function getOffensiveMultipliers(atkTypeIndex) {
+            const result = {};
+            types.forEach((_, defIdx) => {
+                result[defIdx] = chart[atkTypeIndex][defIdx];
+            });
+            return result;
+        }
+
+        function renderCombo() {
+            // 更新计数显示
+            if (selectedCombo.length === 0) {
+                comboCount.innerText = '未选择';
+                comboCount.className = 'text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-400';
+            } else {
+                comboCount.innerText = `${selectedCombo.length} / 2 已选`;
+                comboCount.className = 'text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300';
+            }
+
+            // 更新当前选择徽章
+            if (selectedCombo.length === 0) {
+                comboCurrent.classList.add('hidden');
+                comboResults.innerHTML = `
+                    <div class="lg:col-span-2 py-16 text-center text-slate-500 placeholder-glow rounded-lg border border-dashed border-slate-700">
+                        <i class="fas fa-hand-pointer text-3xl mb-3 text-slate-600"></i>
+                        <div class="text-sm">请先选择 1-2 个属性以查看组合数据</div>
+                    </div>
+                `;
+                return;
+            }
+
+            comboCurrent.classList.remove('hidden');
+            comboCurrentBadges.innerHTML = selectedCombo.map((idx, i) => `
+                <span class="inline-flex items-center gap-1">
+                    ${i > 0 ? '<span class="text-slate-500 text-xs">+</span>' : ''}
+                    <span class="type-badge type-${types[idx]} px-3 py-1 rounded-full text-white text-xs font-bold uppercase shadow-md">${types[idx]}</span>
+                </span>
+            `).join('');
+
+            renderComboResults();
+        }
+
+        function renderComboResults() {
+            // 进攻端：每个选中的属性单独计算
+            const offensiveSection = selectedCombo.map((atkIdx, sidx) => {
+                const mults = getOffensiveMultipliers(atkIdx);
+                return buildOffensiveCard(atkIdx, mults, sidx);
+            }).join('');
+
+            // 防御端：综合计算
+            const defMults = getDefensiveMultipliers(selectedCombo);
+            const defensiveCard = buildDefensiveCard(defMults);
+
+            comboResults.innerHTML = `
+                <!-- 进攻端 -->
+                <div class="bg-slate-900/60 rounded-lg p-5 border border-slate-700">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fas fa-fist-raised text-orange-400"></i>
+                        <h3 class="text-lg font-bold text-white">进攻端</h3>
+                        <span class="text-[10px] text-slate-500 ml-auto">招式属性 → 对方</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">将此属性作为招式类型时，对其他属性的效果。</p>
+                    <div class="space-y-5">
+                        ${offensiveSection}
+                    </div>
+                </div>
+
+                <!-- 防御端 -->
+                <div class="bg-slate-900/60 rounded-lg p-5 border border-slate-700">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fas fa-shield-alt text-sky-400"></i>
+                        <h3 class="text-lg font-bold text-white">防御端</h3>
+                        <span class="text-[10px] text-slate-500 ml-auto">对方 → 此组合</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">
+                        ${selectedCombo.length === 1 ? '此属性作为宝可梦属性时，受到各属性招式的伤害。' : '此双属性宝可梦受到各属性招式的综合伤害。'}
+                    </p>
+                    ${defensiveCard}
+                </div>
+            `;
+        }
+
+        // 构建进攻端卡片（按倍率分桶）
+        function buildOffensiveCard(atkIdx, mults, slotIndex) {
+            // 进攻端单属性招式只会有 2 / 1 / 0.5 / 0 四种倍率
+            const buckets = { 2: [], 1: [], 0.5: [], 0: [] };
+            Object.entries(mults).forEach(([defIdx, val]) => {
+                if (buckets[val]) buckets[val].push(parseInt(defIdx));
+            });
+
+            const header = `
+                <div class="flex items-center gap-2 pb-2 border-b border-slate-800">
+                    <span class="type-badge type-${types[atkIdx]} px-3 py-1 rounded text-white text-xs font-bold uppercase shadow-md">${types[atkIdx]}</span>
+                    <span class="text-xs text-slate-400">属性的招式</span>
+                </div>
+            `;
+
+            const rows = [
+                bucketRow('效果绝佳', '2×', buckets[2], 'emerald', slotIndex),
+                bucketRow('有效果', '1×', buckets[1], 'slate', slotIndex),
+                bucketRow('效果不好', '½×', buckets[0.5], 'red', slotIndex),
+                bucketRow('没有效果', '0×', buckets[0], 'neutral', slotIndex),
+            ].join('');
+
+            return `<div class="space-y-2">${header}${rows}</div>`;
+        }
+
+        // 构建防御端卡片（按倍率分桶）
+        function buildDefensiveCard(mults) {
+            // 防御端可能出现的倍率：4, 2, 1, 0.5, 0.25, 0
+            const buckets = { 4: [], 2: [], 1: [], 0.5: [], 0.25: [], 0: [] };
+            Object.entries(mults).forEach(([atkIdx, val]) => {
+                if (buckets[val] !== undefined) buckets[val].push(parseInt(atkIdx));
+            });
+
+            const isDual = selectedCombo.length === 2;
+
+            const rowsArr = [];
+            // 4× 和 0.25× 仅在双属性下可能出现，单属性时隐藏
+            if (isDual) rowsArr.push(bucketRow('4️四倍弱点', '4×', buckets[4], 'emerald-strong', 0));
+            rowsArr.push(bucketRow('二倍弱点', '2×', buckets[2], 'emerald', 0));
+            rowsArr.push(bucketRow('有效果', '1×', buckets[1], 'slate', 0));
+            rowsArr.push(bucketRow('2 倍抵抗', '½×', buckets[0.5], 'red', 0));
+            if (isDual) rowsArr.push(bucketRow('二倍抵抗', '¼×', buckets[0.25], 'red-strong', 0));
+            rowsArr.push(bucketRow('免疫', '0×', buckets[0], 'neutral', 0));
+
+            return `<div class="space-y-2">${rowsArr.join('')}</div>`;
+        }
+
+        // 通用：分桶数据行
+        function bucketRow(label, multText, typeIndices, tone, slotIndex) {
+            const colorMap = {
+                'emerald-strong': {
+                    label: 'text-emerald-300',
+                    tag: 'bg-emerald-400/20 text-emerald-200 border-emerald-400/50 shadow-[0_0_8px_rgba(52,211,153,0.4)]',
+                    ring: 'border-l-emerald-400'
+                },
+                'emerald': {
+                    label: 'text-green-400',
+                    tag: 'bg-green-500/15 text-green-300 border-green-500/40',
+                    ring: 'border-l-green-500'
+                },
+                'slate': {
+                    label: 'text-slate-300',
+                    tag: 'bg-slate-600/20 text-slate-300 border-slate-600/40',
+                    ring: 'border-l-slate-500'
+                },
+                'red': {
+                    label: 'text-red-400',
+                    tag: 'bg-red-500/15 text-red-300 border-red-500/40',
+                    ring: 'border-l-red-500'
+                },
+                'red-strong': {
+                    label: 'text-red-300',
+                    tag: 'bg-red-700/25 text-red-200 border-red-600/60 shadow-[0_0_8px_rgba(220,38,38,0.3)]',
+                    ring: 'border-l-red-700'
+                },
+                'neutral': {
+                    label: 'text-slate-500',
+                    tag: 'bg-black/40 text-slate-400 border-slate-700',
+                    ring: 'border-l-slate-700'
+                }
+            };
+            const c = colorMap[tone];
+
+            // 如果没有数据，返回空状态（柔和隐藏）
+            if (typeIndices.length === 0) {
+                return `
+                    <div class="bucket-card empty flex items-center gap-3 pl-3 py-2 border-l-2 ${c.ring} opacity-40">
+                        <div class="w-20 flex-shrink-0">
+                            <div class="text-[11px] ${c.label} font-bold uppercase tracking-wider leading-tight">${label}</div>
+                            <div class="multiplier-tag text-sm ${c.label}">${multText}</div>
+                        </div>
+                        <div class="text-xs text-slate-600 italic">—</div>
+                    </div>
+                `;
+            }
+
+            const badges = typeIndices.map((idx, i) => `
+                <span class="combo-badge type-${types[idx]} text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm uppercase" 
+                      style="animation-delay: ${(slotIndex * 0.05) + (i * 0.035)}s">
+                    ${types[idx]}
+                </span>
+            `).join('');
+
+            return `
+                <div class="bucket-card flex items-start gap-3 pl-3 py-2 border-l-2 ${c.ring}">
+                    <div class="w-20 flex-shrink-0 pt-0.5">
+                        <div class="text-[11px] ${c.label} font-bold uppercase tracking-wider leading-tight">${label}</div>
+                        <div class="multiplier-tag text-sm ${c.label}">${multText}</div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 flex-1">${badges}</div>
+                </div>
+            `;
+        }
+
+        // ============ 矩阵交叉高亮 ============
         function handleMatrixHover(e) {
             const cell = e.target.closest('.matrix-cell');
             if (cell) {
                 const r = cell.dataset.row;
                 const c = cell.dataset.col;
                 
-                // Highlight all in Row R and Col C
                 document.querySelectorAll('.matrix-cell').forEach(td => {
                     if (td.dataset.row === r || td.dataset.col === c) {
                         td.classList.add('highlight-crosshair');
@@ -439,7 +841,6 @@
                     }
                 });
 
-                // Highlight Headers
                 document.querySelectorAll('th').forEach(th => th.classList.remove('header-highlight'));
                 const rowHeader = document.getElementById(`th-row-${r}`);
                 const colHeader = document.getElementById(`th-col-${c}`);
@@ -453,13 +854,11 @@
             document.querySelectorAll('th').forEach(th => th.classList.remove('header-highlight'));
         }
 
-        // --- INIT MATRIX ---
+        // ============ 矩阵初始化 ============
         function initMatrix() {
-            // Add event listeners for crosshair
             matrixTable.addEventListener('mouseover', handleMatrixHover);
             matrixTable.addEventListener('mouseout', clearMatrixHover);
 
-            // Header Row (Defenders)
             const thead = document.createElement('tr');
             thead.innerHTML = `<th class="p-1 bg-slate-900 sticky left-0 z-20 border-b border-r border-slate-700 text-xs text-slate-400">攻\\防</th>`;
             
@@ -474,36 +873,31 @@
             });
             matrixTable.appendChild(thead);
 
-            // Body Rows (Attackers)
             chart.forEach((row, rIndex) => {
                 const tr = document.createElement('tr');
                 tr.className = "matrix-row";
 
-                // Row Label (Attacker)
                 const th = document.createElement('th');
                 th.className = `p-1 text-xs uppercase text-white font-bold sticky left-0 z-10 type-${types[rIndex]} border-r border-slate-900 text-left pl-2 rounded-l transition-all duration-200`; 
                 th.id = `th-row-${rIndex}`;
                 th.innerText = types[rIndex];
                 tr.appendChild(th);
 
-                // Cells
                 row.forEach((val, cIndex) => {
                     const td = document.createElement('td');
-                    
-                    // Metadata for Highlighting
                     td.dataset.row = rIndex;
                     td.dataset.col = cIndex;
 
-                    let bgClass = "bg-slate-700 text-slate-500"; // Default 1x
+                    let bgClass = "bg-slate-700 text-slate-500";
                     
                     if (val === 2) bgClass = "bg-green-500 text-black shadow-[0_0_5px_rgba(34,197,94,0.5)] z-10";
                     else if (val === 0.5) bgClass = "bg-red-500/80 text-white";
                     else if (val === 0) bgClass = "bg-black text-slate-600 border border-slate-700";
-                    else bgClass = "bg-slate-700/50 text-white/30"; // 1x slightly faded
+                    else bgClass = "bg-slate-700/50 text-white/30";
 
                     td.className = `matrix-cell ${bgClass}`;
                     td.innerText = val === 0.5 ? '½' : val;
-                    td.title = `${types[rIndex]} vs ${types[cIndex]}: ${val}×`; // Changed x to ×
+                    td.title = `${types[rIndex]} vs ${types[cIndex]}: ${val}×`;
 
                     tr.appendChild(td);
                 });
@@ -512,10 +906,10 @@
             });
         }
 
-        // Run
+        // 初始化
         initCalculator();
+        initCombo();
         initMatrix();
-
     </script>
 </body>
 </html>
